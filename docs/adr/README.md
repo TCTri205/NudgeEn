@@ -10,4 +10,4 @@ This directory contains records of significant architectural decisions made duri
 
 ## List of ADRs
 
-- *None currently recorded. Please create 001-*.md when a major decision is made.*
+- **Accepted**: [ADR-001: Authentication Provider](file:///d:/Persional_Projects/NudgeEn/docs/adr/001-authentication-provider.md) (NextAuth.js for cost optimization)

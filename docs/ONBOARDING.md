@@ -8,11 +8,14 @@ Welcome to the NudgeEn team! This guide will help you get started with the "AI M
 2. **Review the PRD**: Read [PRD-v1.md](file:///d:/Persional_Projects/NudgeEn/docs/PRD-v1.md) to understand the project goal.
 3. **Environment Setup**: (Instructions for local development environment will be added here).
 
-## 🛠 Tech Stack (To be finalized)
+## 🛠 Tech Stack
 
-- Frontend: Next.js / Vite
-- Backend: Python (FastAPI/Flask) or Node.js
-- LLM: GPT-4o / Claude 3.5
+- **Frontend:** Next.js (Tailwind CSS, Lucide Icons)
+- **Backend:** Python (FastAPI)
+- **Database:** SQLite (for User Profiles & Session Metadata)
+- **LLM:** Gemini 2.5 Flash (MVP)
+- **Environment:**
+  - `GOOGLE_API_KEY`: Required for Gemini access.
 
 ## 📋 Workflow
 
