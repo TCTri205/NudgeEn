@@ -19,35 +19,28 @@
 
 ## Deployment Shape
 
-```text
-Browser
-  |
-  v
-Next.js (Vercel)
-  |- Auth.js
-  |- BFF routes
-  |
-  v
-FastAPI API
-  |- chat orchestration
-  |- gatekeeper
-  |- streaming response
-  |- enqueue background jobs
-  |
-  +--> PostgreSQL
-  +--> Redis
-          |
-          v
-       Taskiq Workers
-        |- memory extraction
-        |- weekly summaries
-        |- analytics/materialization
-        |- retries / dead-letter handling
+```mermaid
+graph TD
+    User((User)) --> Browser[Browser]
+    
+    subgraph "Frontend (Vercel)"
+        Browser --> NextJS["Next.js Web\n(Auth.js, BFF Routes)"]
+    end
+
+    subgraph "Backend (Render/Railway/Fly)"
+        NextJS --> FastAPI["FastAPI API\n(Orchestration, Gatekeeper, SSE)"]
+        
+        FastAPI --> Postgres[("PostgreSQL")]
+        FastAPI --> Redis[("Redis")]
+        
+        Redis --> Taskiq["Taskiq Workers\n(Memory, Summaries, Analytics)"]
+        Taskiq --> Postgres
+    end
 ```
 
 ## Why This Stack
 
-- PostgreSQL is the system of record from day one. This removes the risky SQLite-to-Postgres rewrite later.
+- PostgreSQL is the system of record from day one, providing robust ACID transactions and a mature scaling path.
 - Redis is shared deliberately across three concerns only: queue transport, short-lived cache, and rate limiting.
 - Worker processes are mandatory, not optional. They keep heavy LLM and post-processing work off the chat response path.
 - Next.js acts as the web-facing entry point, but business logic stays in FastAPI to avoid duplicating orchestration logic.

@@ -17,10 +17,10 @@
 | 1 | **Scalability** | Yes | The system must support high concurrent chat traffic and growing message volume. |
 | 2 | **Recoverability** | Yes | Background tasks must survive API restarts and worker crashes. |
 | 3 | **Extensibility** | Yes | The product will likely add providers, modalities, analytics, and richer pedagogy. |
-| 4 | **Responsiveness** |  | Chat UX needs low TTFB and smooth streaming. |
-| 5 | **Data Integrity** |  | User profile, memory, and message history must remain consistent. |
-| 6 | **Security** |  | Auth, abuse monitoring, and PII scrubbing are foundational. |
-| 7 | **Observability** |  | Queue lag, model failures, and DB pressure must be visible. |
+| 4 | **Responsiveness** | | Chat UX needs low TTFB and smooth streaming. |
+| 5 | **Data Integrity** | | User profile, memory, and message history must remain consistent. |
+| 6 | **Security** | | Auth, abuse monitoring, and PII scrubbing are foundational. |
+| 7 | **Observability** | | Queue lag, model failures, and DB pressure must be visible. |
 
 ## Implicit Characteristics
 
@@ -80,18 +80,15 @@ Recommended production direction:
 - `Redis` for cache, rate limiting, and queue transport
 - `Taskiq Workers` for async workloads
 
-```text
-Browser
-  |
-  v
-Next.js Web/BFF
-  |
-  v
-FastAPI API
-  | \
-  |  \--> PostgreSQL
-  |
-  \----> Redis broker/cache ----> Taskiq Workers
+```mermaid
+graph TD
+    Browser[Browser] --> NextJS["Next.js Web/BFF"]
+    NextJS --> FastAPI["FastAPI API"]
+    
+    FastAPI --> Postgres[("PostgreSQL")]
+    FastAPI --> Redis[("Redis broker/cache")]
+    
+    Redis --> Taskiq["Taskiq Workers"]
 ```
 
 ## Key Design Patterns

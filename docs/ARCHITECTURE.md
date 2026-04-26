@@ -20,43 +20,35 @@ This is the right balance for the current product:
 
 ## 2. High-Level Topology
 
-```text
-                         +----------------------+
-                         |      Browser         |
-                         +----------+-----------+
-                                    |
-                                    v
-                         +----------------------+
-                         |   Next.js Web         |
-                         | - Auth.js            |
-                         | - UI                 |
-                         | - session boundary   |
-                         +----------+-----------+
-                                    |
-                                    v
-                         +----------------------+
-                         |     FastAPI API      |
-                         | - chat endpoint      |
-                         | - gatekeeper         |
-                         | - orchestration      |
-                         | - SSE streaming      |
-                         +-----+-----------+----+
-                               |           |
-                               |           |
-                               v           v
-                     +----------------+  +----------------+
-                     | PostgreSQL     |  | Redis          |
-                     | system of      |  | cache + broker |
-                     | record         |  +--------+-------+
-                     +--------+-------+           |
-                              ^                   v
-                              |         +----------------------+
-                              +---------+  Taskiq Workers      |
-                                        | - memory extraction  |
-                                        | - weekly summaries   |
-                                        | - analytics jobs     |
-                                        | - retry processing   |
-                                        +----------------------+
+```mermaid
+graph TD
+    User((User)) --> Browser[Browser]
+    
+    subgraph "Frontend Layer"
+        Browser --> NextJS["Next.js Web\n(Auth.js, UI, Session)"]
+    end
+
+    subgraph "Backend Layer (Modular Monolith)"
+        NextJS --> FastAPI["FastAPI API\n(Chat, Gatekeeper, Orchestration, SSE)"]
+        
+        FastAPI --> Postgres[("PostgreSQL\n(System of Record)")]
+        FastAPI --> Redis[("Redis\n(Cache + Broker)")]
+        
+        Redis --> Taskiq["Taskiq Workers\n(Memory, Summaries, Analytics)"]
+        Taskiq --> Postgres
+    end
+
+    subgraph "External Providers"
+        FastAPI -.-> AI["AI Providers\n(Gemini, Groq)"]
+        Taskiq -.-> AI
+    end
+
+    style NextJS fill:#f9f,stroke:#333,stroke-width:2px
+    style FastAPI fill:#bbf,stroke:#333,stroke-width:2px
+    style Taskiq fill:#dfd,stroke:#333,stroke-width:2px
+    style Postgres fill:#ffd,stroke:#333,stroke-width:2px
+    style Redis fill:#ffd,stroke:#333,stroke-width:2px
+    style AI fill:#eee,stroke:#333,stroke-dasharray: 5 5
 ```
 
 ## 3. Module Boundaries
