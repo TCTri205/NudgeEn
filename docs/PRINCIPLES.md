@@ -1,31 +1,37 @@
 # NudgeEn Core Principles
 
-These principles guide the design, development, and architectural decisions of NudgeEn.
+## 1. Optimized Scaling & Robustness
 
-## 1. Zero-Base Costing (Efficiency)
+- **Principle:** Prefer architectures that preserve data delivery and concurrency safety over short-term simplicity.
+- **Goal:** Build a system that remains stable as traffic and background processing grow.
+- **Implementation:** Use **PostgreSQL** for durable data and **Redis + workers** for asynchronous workloads.
 
-- **Principle**: Prioritize tools and services that cost $0 during the MVP phase.
-- **Goal**: Minimize financial risk and allow the project to iterate without burning cash.
-- **Examples**: Using **Auth.js** (Self-hosted) instead of paid IAM, **SQLite** instead of managed DBs, and the **Gemini Free Tier**.
+## 2. Pedagogy as a Sidekick
 
-## 2. Pedagogy as a Sidekick (Experience)
+- **Principle:** Learning should be non-intrusive.
+- **Goal:** Preserve the "friendship vibe" instead of making the experience feel like a test.
+- **Implementation:** Use the **Sparkle Icon** for subtle feedback.
 
-- **Principle**: Learning should be non-intrusive.
-- **Goal**: Maintain the "friendship vibe" by avoiding constant corrections.
-- **Implementation**: use the **Sparkle Icon ✨** for subtle feedback rather than interrupting the chat flow with red ink.
+## 3. Privacy by Design
 
-## 3. Privacy by Design (Trust)
+- **Principle:** User data is valuable and must be minimized and scrubbed.
+- **Goal:** Support memory without storing unnecessary sensitive PII.
+- **Implementation:** The memory pipeline must scrub PII before persistence.
 
-- **Principle**: User data is sacred but must be scrubbed.
-- **Goal**: Enable powerful memory without storing sensitive PII.
-- **Implementation**: The **Memory Agent** must filter out addresses, phone numbers, and PII before saving to the user profile JSON.
+## 4. Physical Separation of Concerns
 
-## 4. Web-First, Responsive Packaging (UI/UX)
+- **Principle:** Decouple the user-facing response path from heavy background processing.
+- **Goal:** Ensure typing indicators and streamed replies are never blocked by memory extraction or analytics jobs.
+- **Implementation:** Use **Taskiq Workers + Redis** to move heavy tasks to dedicated background processes.
 
-- **Principle**: Prioritize the desktop browser experience while maintaining layout flexibility for mobile browsers.
-- **Goal**: Deliver a polished, high-quality web messaging interface as the primary MVP platform, with mobile-friendliness achieved through responsive design rather than dedicated mobile-first features.
+## 5. Single Source of Truth
 
-## 5. Logical Mapping (Consistency)
+- **Principle:** Architectural intent must be consistent across product, platform, and delivery documentation.
+- **Goal:** Eliminate drift such as conflicting database or deployment choices.
+- **Implementation:** Treat `docs/ARCHITECTURE.md` as the canonical runtime architecture document.
 
-- **Principle**: Align Project Management artifacts for zero confusion.
-- **Implementation**: Use **0-indexed numbering** for both Epics and Sprints (e.g., EPIC-00 aligns with Sprint 0). This ensures a direct, one-to-one logical map between goals and execution.
+## 6. Logical Mapping
+
+- **Principle:** Planning artifacts should be easy to navigate and align with implementation boundaries.
+- **Goal:** Reduce delivery confusion for a small team.
+- **Implementation:** Keep epics, sprints, ADRs, and architecture docs mutually consistent.

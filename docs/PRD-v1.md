@@ -6,81 +6,85 @@ Creating an AI "texting friend" to help practice real-world reading/writing skil
 
 ## 2. Market Analysis
 
-- **Traditional Platforms (Duolingo, Memrise):** Primarily offer roleplay with fixed scenarios (e.g., ordering at a restaurant). They can feel rigid and lack the personal connection of a real friend.
-- **Dedicated Chatbots (Andy English):** Often feel like a series of multiple-choice questions in a chat UI rather than natural conversation.
+- **Traditional Platforms (Duolingo, Memrise):** Primarily offer roleplay with fixed scenarios. They can feel rigid and lack the personal connection of a real friend.
+- **Dedicated Chatbots (Andy English):** Often feel like a series of exercises in a chat UI rather than natural conversation.
 - **General AI (Character.ai, ChatGPT, Pi):**
-  - *Character.ai:* Great for roleplay but lacks pedagogical features (vocabulary tracking, subtle corrections).
-  - *ChatGPT:* Professional and assistant-like, lacking the "vibe" of a casual friend.
-- **Language Exchange (Tandem, HelloTalk):** High psychological pressure, slow response times, and potential social risks.
-- **The Gap:** A hybrid solution that combines the natural personality of Character.ai with the clear learning objectives of Duolingo. It solves the pain point of wanting to practice without feeling judged or "graded."
+  - *Character.ai:* Great for roleplay but lacks pedagogical features such as vocabulary tracking and subtle corrections.
+  - *ChatGPT:* Helpful but often too assistant-like, missing the vibe of a casual friend.
+- **Language Exchange (Tandem, HelloTalk):** Higher psychological pressure, slower response times, and social risk.
+- **The Gap:** A hybrid solution that combines natural chat personality with explicit learning value.
 
 ## 3. Product Requirements Document (MVP)
 
 ### 3.1. Overview & Goals
 
-- **Objective:** Build an AI chatbot that acts as a real friend in a messaging interface (like Messenger or Telegram) to improve daily English reading and writing.
-- **Scope:** Text-only conversation (Reading & Writing). Voice/Audio is out of scope for MVP.
+- **Objective:** Build an AI chatbot that acts as a real friend in a messaging interface to improve daily English reading and writing.
+- **Scope:** Text-only conversation. Voice/audio is out of scope for MVP.
 
 ### 3.2. Target Persona
 
-- **Age:** 18-30 (Students or Young Professionals).
-- **Profile:** Basic grammar knowledge but struggles with fluency, typing speed, and practical vocabulary (slang, idioms, natural expressions).
-- **Behavior:** Enjoys social media and messaging; avoids high-pressure traditional courses.
+- **Age:** 18-30
+- **Profile:** Has basic grammar knowledge but struggles with fluency, typing speed, and natural vocabulary.
+- **Behavior:** Comfortable with social apps, avoids high-pressure learning experiences.
 
 ### 3.3. Key Features (Functional Requirements)
 
 #### [Group: User Experience]
 
-- **[REQ-001] Messenger-like Interface:**
-  - Chat bubble display with support for emojis and message reactions.
-  - Real-time feedback with typing indicators ("AI is typing...").
-  - Responsive design (Primary: Desktop Web; Secondary: Mobile Browser).
-- **[REQ-002] Persona Customization:**
-  - Users choose a "Vibe": Sarcastic/Banter, Gentle/Empathetic, or Tech-savvy.
-- **[REQ-003] Subtle Correction:**
-  - Corrections are non-intrusive. A **Sparkle icon ✨** appears next to messages with better alternatives.
-  - Tapping reveals: Original vs. Improved vs. Why (brief explanation).
+- **[REQ-001] Messenger-like Interface**
+  - Chat bubble display with support for emojis and reactions.
+  - Real-time typing indicators.
+  - Responsive design for desktop web first, mobile browser second.
+- **[REQ-002] Persona Customization**
+  - Users choose a vibe: Sarcastic/Banter, Gentle/Empathetic, or Tech-savvy.
+- **[REQ-003] Subtle Correction**
+  - Corrections are non-intrusive.
+  - A **Sparkle icon** appears next to messages with better alternatives.
+  - Tapping reveals: Original vs Improved vs brief explanation.
 
 #### [Group: Intelligence & Memory]
 
-- **[REQ-004] Contextual Memory (User Profile):**
-  - System extracts key facts (name, hobbies, goals) into a persistent JSON profile.
-  - References past conversations naturally.
-- **[REQ-005] Initial Calibration (Onboarding):**
-  - A 3-turn interactive "Vibe Check":
-    1. Introduction & Name.
-    2. Interest inquiry.
-    3. Short roleplay snippet for level assessment.
-- **[REQ-006] Weekly Vibe Check:**
-  - Automated summary of progress delivered as an in-chat "card".
-  - Highlights: Most used new words, grammar improvement trend.
-  - **Trigger:** Checked on first user message if `weekly_check_last_sent` > 7 days. Data generated from `stats` and recent memory.
+- **[REQ-004] Contextual Memory (User Profile)**
+  - The system extracts key facts such as name, hobbies, and goals into a persistent user profile.
+  - Past conversations are referenced naturally.
+- **[REQ-005] Initial Calibration (Onboarding)**
+  - A 3-turn interactive vibe check:
+    1. Introduction and name
+    2. Interest inquiry
+    3. Short roleplay snippet for level assessment
+- **[REQ-006] Weekly Vibe Check**
+  - Automated summary of progress delivered as an in-chat card.
+  - Highlights: most used new words, grammar improvement trend.
+  - Triggered on the first user message after 7 days since the last summary.
 
 #### [Group: Infrastructure & Security]
 
-- **[REQ-007] Authentication:**
-  - Self-hosted/Embedded IAM via **NextAuth.js (Auth.js)**.
-  - Supports **OAuth2 (Google/GitHub)** and **Basic Authentication (Email/Password)**.
-- **[REQ-008] Safety Gatekeeper:**
-  - Lightweight prompt evaluating input/output for safety and scope (no code, no translation).
-  - Runs **sequentially** (fail-fast) before Persona Agent.
-  - If triggered, gracefully replies: "I'm not sure how to respond to that! Let's get back to chatting in English."
-  - Attempts are logged for abuse monitoring.
+- **[REQ-007] Authentication**
+  - Auth.js with OAuth2 (Google/GitHub) and Credentials (Email/Password).
+- **[REQ-008] Safety Gatekeeper**
+  - Lightweight prompt evaluating input/output for safety and scope.
+  - Runs sequentially before the Persona Agent.
+  - If triggered, replies gracefully and logs the attempt for monitoring.
 
 ### 3.4. Technical Architecture & Data Schemas
 
 #### [Architecture & Deployment]
 
-1. **Frontend:** Next.js deployed on **Vercel** (automatic CI/CD).
-2. **Backend:** FastAPI hosted on **Railway / Render**.
-3. **Logic Flow:**
-   - User Message -> Webhook -> **Gatekeeper Agent** (Parallel/Pre-check) -> **Persona Agent**.
-   - **Persona Agent** generates response + correction in one JSON object.
-   - **Memory Agent** (Background/Async) updates User Profile JSON based on the interaction.
+1. **Frontend:** **Next.js Web** on **Vercel**, acting as UI, auth boundary, and thin BFF.
+2. **Backend:** **FastAPI API** on **Render / Railway / Fly**, optimized for chat orchestration and SSE streaming.
+3. **Primary Database:** **PostgreSQL** as the system of record.
+4. **Cache / Broker:** **Redis** for rate limiting, caching, and queue transport.
+5. **Background Processing:** **Taskiq Workers** for memory extraction, weekly summaries, and analytics jobs.
+6. **Logic Flow:**
+   - User Message -> Next.js Web -> FastAPI API
+   - Gatekeeper Agent -> Persona Agent
+   - API persists the interaction and streams the response
+   - API enqueues background jobs after commit
+   - Workers update profile, memory facts, and derived progress data
 
 #### [Data Schemas]
 
-- **User Profile JSON:**
+- **User Profile JSON Projection:**
 
 ```json
 {
@@ -93,9 +97,9 @@ Creating an AI "texting friend" to help practice real-world reading/writing skil
   "updated_at": "ISO-8601",
   "weekly_check_last_sent": "ISO-8601",
   "extracted_memories": [
-    {"topic": "hobby", "detail": "loves hiking", "timestamp": "ISO-8601"}
+    { "topic": "hobby", "detail": "loves hiking", "timestamp": "ISO-8601" }
   ],
-  "stats": {"messages_sent": 0, "corrections_viewed": 0}
+  "stats": { "messages_sent": 0, "corrections_viewed": 0 }
 }
 ```
 
@@ -115,36 +119,38 @@ Creating an AI "texting friend" to help practice real-world reading/writing skil
 
 ### 3.5. Operational Constraints & Non-Functional Requirements
 
-- **[REQ-009] Feasibility & Cost:**
-  - Primary: **Gemini 2.5 Flash**.
-  - Fallback: **Groq API** (for high speed/low latency fallback).
-- **[REQ-010] Rate Limiting:**
-  - MVP limit: **50 messages per 24 hours** per user to manage API costs.
-- **[REQ-011] Fallback Strategy:**
-  - If API fails/timeouts, display: "Sorry, I'm feeling a bit sleepy. Can we chat in a minute?"
-- **[REQ-012] Scalability & Storage:**
-  - Start with **SQLite + WAL mode**.
-  - Migration path to **PostgreSQL/Supabase** once user base exceeds 1,000 active users.
-- **[REQ-013] Quality Evaluation:** Use **LLM-as-a-Judge** for automated regression testing.
+- **[REQ-009] Feasibility & Cost**
+  - Primary: **Gemini 2.5 Flash**
+  - Fallback: **Groq API**
+- **[REQ-010] Rate Limiting**
+  - MVP limit: **50 messages per 24 hours** per user.
+- **[REQ-011] Fallback Strategy**
+  - If model calls fail or time out, show a graceful fallback message.
+- **[REQ-012] Scalability & Storage**
+  - Use **PostgreSQL** from day one as the primary database.
+  - Use **Redis** for queue transport, rate limiting, and ephemeral caching.
+  - Run heavy post-processing in **Taskiq Workers**, not on the API request thread.
+- **[REQ-013] Quality Evaluation**
+  - Use **LLM-as-a-Judge** for automated regression testing.
 
 ### 3.6. Security & Privacy
 
-- **Encryption:** SQLite database must be encrypted at rest.
-- **PII Scrubbing:** Memory extraction agent must filter out phone numbers and specific addresses.
-- **User Agency:** UI button for "Wipe My Memory" (deletes Profile JSON).
+- **Encryption:** PostgreSQL storage and backups must be encrypted at rest.
+- **PII Scrubbing:** Memory extraction must filter phone numbers and specific addresses before persistence.
+- **User Agency:** UI button for "Wipe My Memory" to delete stored memory/profile state.
 
 ### 3.7. Success Metrics
 
-- **D3/D7 Retention:** Goal > 20% for MVP.
-- **Engagement:** > 10 messages/session.
-- **Learning Impact:** % of corrections expanded by users.
+- **D3/D7 Retention:** Goal > 20% for MVP
+- **Engagement:** > 10 messages/session
+- **Learning Impact:** % of corrections expanded by users
 
 ---
 
 ## 4. Glossary / Definitions
 
-- **Vibe Check (Onboarding):** The initial 3-turn conversation where the AI calibrates to the user's personality and English proficiency.
-- **Gatekeeper Agent:** A fast, lightweight AI check that runs before the main AI to block inappropriate, harmful, or out-of-scope requests.
-- **Persona Agent:** The primary AI that acts as the friend, formatted to return both a conversational reply and a grammar correction.
-- **Memory Agent:** A background AI process that summarizes chat history into actionable facts to update the User Profile JSON.
-- **Subtle Correction:** The UI mechanism (e.g., a sparkle icon ✨) that allows users to view grammar corrections without interrupting the flow of the conversation.
+- **Vibe Check (Onboarding):** Initial 3-turn conversation that calibrates personality and English proficiency.
+- **Gatekeeper Agent:** Fast AI check that runs before the main AI to block unsafe or out-of-scope requests.
+- **Persona Agent:** Primary AI that acts as the friend and returns conversational reply plus correction payload.
+- **Memory Agent:** Background process that extracts facts and updates user profile projections.
+- **Subtle Correction:** UX pattern where correction details are hidden behind a sparkle icon rather than interrupting flow.

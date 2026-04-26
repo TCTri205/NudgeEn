@@ -1,22 +1,32 @@
-# Sprint 1: The Gateway (Auth + UI + Basic API)
+# Sprint 1: Scalable Gateway (Auth + UI + Basic API)
 
 ## Overview
 
 Status: **Pending**
-Focus: Establishing the authentication layer and the core messaging interface.
+
+Focus:
+
+- establish authentication
+- establish the initial chat path
+- lay down PostgreSQL, Redis, queue, and worker foundations
 
 ## Tasks
 
 - [ ] **Infrastructure**
-  - [ ] Initialize NextAuth.js (Auth.js)
-  - [ ] Configure Google & GitHub OAuth Providers
-  - [ ] Implement Credentials Provider (Email/Password)
-  - [ ] Setup SQLite Adapter for Auth.js
+  - [ ] Initialize Auth.js
+  - [ ] Configure Google and GitHub OAuth providers
+  - [ ] Implement Credentials provider
+  - [ ] Configure PostgreSQL adapter for Auth.js
+  - [ ] Provision Redis for queue and rate limiting
+  - [ ] Bootstrap Taskiq worker process
 - [ ] **Frontend**
-  - [ ] Create Login/Register Pages
-  - [ ] Basic Chat Window UI
-  - [ ] Message Bubble Components
+  - [ ] Create login/register pages
+  - [ ] Build basic chat window UI
+  - [ ] Build message bubble components
+  - [ ] Add typing indicator UX
 - [ ] **Backend**
-  - [ ] Connect Frontend to Gemini 2.5 Flash API
-  - [ ] Integrate **Groq API** as a high-speed fallback
-  - [ ] Basic "Ping-Pong" message exchange logic
+  - [ ] Connect to Gemini 2.5 Flash
+  - [ ] Integrate Groq fallback
+  - [ ] Implement basic message exchange flow
+  - [ ] Persist conversations and messages in PostgreSQL
+  - [ ] Enqueue post-response background jobs

@@ -1,22 +1,24 @@
 # Sprint 0 - Core Foundation
 
-**Duration:** 2026-04-26 — 2026-05-10
+**Duration:** 2026-04-26 - 2026-05-10
 
-## 🎯 Sprint Goals
+## Sprint Goals
 
-- [x] Reorganize documentation & project structure.
-- [x] Define Product Requirements (PRD) & Onboarding.
-- [ ] Setup initial FastAPI backend with Gemini 2.5 integration shell.
-- [ ] Create initial design mockups for Messenger-like UI.
+- [x] Reorganize documentation and project structure.
+- [x] Define PRD, architecture direction, and onboarding.
+- [ ] Set up initial FastAPI backend shell.
+- [ ] Prepare initial web application shell.
 
-## 📋 Task List
+## Task List
 
-- [x] **[DOC-01]** Analyze PRD and Onboarding files.
-- [x] **[DOC-02]** Simplify Project Management structure.
-- [ ] **[INF-01]** Setup Python 3.10+ & FastAPI base project.
-- [ ] **[INF-02]** Configure `.env` with GOOGLE_API_KEY.
-- [ ] **[DES-01]** Sketch core chat interaction flow.
+- [x] **[DOC-01]** Analyze product and platform requirements.
+- [x] **[DOC-02]** Normalize architecture, roadmap, ADR, and onboarding docs.
+- [ ] **[INF-01]** Set up Python 3.12+ and FastAPI base project.
+- [ ] **[INF-02]** Set up Next.js base project and Auth.js shell.
+- [ ] **[INF-03]** Define initial PostgreSQL and Redis environment contracts.
 
-## 📝 Sprint Documentation
+## Sprint Documentation
 
-- (Add links to design docs, schemas, or research notes for this sprint here)
+- [PRD-v1.md](../../PRD-v1.md)
+- [ARCHITECTURE.md](../../ARCHITECTURE.md)
+- [TECHSTACK.md](../../TECHSTACK.md)

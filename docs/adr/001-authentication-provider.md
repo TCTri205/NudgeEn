@@ -6,22 +6,32 @@ Accepted
 
 ## Context
 
-NudgeEn requires a secure authentication system to manage user profiles and chat history. The initial recommendation was Clerk (a managed IAM service). However, the project goal is to optimize for cost ("the cheaper the better") and avoid per-user scaling fees where possible.
+NudgeEn requires a secure authentication system to manage user profiles and chat history. The team wants strong control over user data and wants to avoid per-user pricing from an external IAM SaaS when possible.
 
 ## Decision
 
-We will use **NextAuth.js (Auth.js)** for authentication, supporting both **OAuth2 (Google/GitHub)** and **Email/Password (Credentials provider)**.
+Use **Auth.js** for authentication, supporting:
+
+- OAuth2 with Google and GitHub
+- Credentials provider for Email/Password
 
 ## Rationale
 
-- **Cost**: $0. It runs as part of the Next.js application without separate licensing or per-user "active user" fees.
-- **Vendor Lock-in**: NextAuth.js is open-source and allows us to own the user data directly in our own database (SQLite/PostgreSQL).
-- **Integration**: Native integration with Next.js, which is the frontend framework for NudgeEn.
-- **Cheaper at Scale**: Avoids the "SaaS tax" associated with managed providers like Clerk or Auth0 as the user base grows.
-- **Flexibility**: Including Email/Password allows users without OAuth accounts to register, broadening the potential user base.
+- **Cost:** Runs as part of the web application without separate per-user IAM pricing.
+- **Control:** User identity data stays in our own **PostgreSQL** database.
+- **Integration:** Strong fit with Next.js.
+- **Flexibility:** Supports both OAuth and credentials-based login.
 
 ## Consequences
 
-- **Development Overhead**: Requires more manual setup of UI (Login/Register pages) compared to Clerk's pre-built components.
-- **Security Responsibility**: We are responsible for managing session security and database encryption for user credentials. **Password hashing (Argon2/bcrypt)** must be implemented correctly.
-- **Maintenance**: Requires keeping NextAuth package and its adapters up to date. We also need to manage account recovery (Forgot Password) which requires an email SMTP setup.
+Positive:
+
+- lower long-term IAM cost
+- stronger data ownership
+- clean integration with the web application
+
+Negative:
+
+- more implementation responsibility than a fully managed auth SaaS
+- password hashing, session hardening, and recovery flows must be implemented carefully
+- email recovery and verification require additional infrastructure
