@@ -1,0 +1,19 @@
+{
+    "exit_code":  2,
+    "timestamp":  "2026-04-01T12:35:58Z",
+    "remediation":  {
+                        "pip_retry":  ".\\.claude\\skills\\.venv\\Scripts\\Activate.ps1; pip install \u003cpackage\u003e",
+                        "build_tools":  "https://visualstudio.microsoft.com/visual-cpp-build-tools/",
+                        "winget_packages":  "winget install Gyan.FFmpeg ImageMagick.ImageMagick"
+                    },
+    "optional_failures":  [
+                              "FFmpeg: installation failed",
+                              "ImageMagick: installation failed"
+                          ],
+    "skipped":  [
+
+                ],
+    "critical_failures":  [
+
+                          ]
+}
