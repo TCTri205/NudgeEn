@@ -13,9 +13,12 @@
 
 - [x] **[DOC-01]** Analyze product and platform requirements.
 - [x] **[DOC-02]** Normalize architecture, roadmap, ADR, and onboarding docs.
-- [ ] **[INF-01]** Set up Python 3.12+ and FastAPI base project.
-- [ ] **[INF-02]** Set up Next.js base project and Auth.js shell.
-- [ ] **[INF-03]** Define initial PostgreSQL and Redis environment contracts.
+- [x] **[TICKET-01](TICKET-01.md)** Set up FastAPI base project.
+- [x] **[TICKET-02](TICKET-02.md)** Set up Next.js base project and Auth.js shell.
+- [ ] **[TICKET-03](TICKET-03.md)** Define initial PostgreSQL and Redis environment contracts.
+- [ ] **[TICKET-04](TICKET-04.md)** Integrate Alembic for database migrations.
+- [ ] **[TICKET-05](TICKET-05.md)** Setup Taskiq worker framework.
+- [ ] **[TICKET-06](TICKET-06.md)** Establish CI/CD & Linting baseline.
 
 ## Sprint Documentation
 

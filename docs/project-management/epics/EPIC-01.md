@@ -1,32 +1,73 @@
 # EPIC-01: Security, Auth & Guardrails
 
-**Focus:** Auth.js, credentials, OAuth, safety controls  
-**Status:** Pending (Planned for Sprint 1)  
-**Sprint:** Sprint 1: Scalable Gateway  
-**Priority:** P0 - Critical Path
+- **Status:** Pending (Planned for Sprint 1)
+- **Priority:** P0 - Critical Path
+- **Source requirement:** PRD-v1.md (REQ-007, REQ-008, REQ-010)
+- **Impacted domains:** Authentication, Security, Platform
 
 ---
 
-## Epic Description
+## Summary
 
-Implement comprehensive authentication, authorization, and safety control infrastructure. This epic establishes the identity boundary for the application, ensuring secure user access while protecting against malicious inputs and unsafe AI behavior. It creates the trust foundation that allows users to interact with their AI friend safely.
-
-This epic builds directly on the infrastructure foundation from EPIC-00 and enables the user-facing features in EPIC-02 and beyond.
+Implement comprehensive authentication, authorization, and safety control infrastructure. This epic establishes the identity boundary for the application, ensuring secure user access while protecting against malicious inputs and unsafe AI behavior. It creates the trust foundation that allows users to interact with their AI friend safely. This epic builds directly on the infrastructure foundation from EPIC-00 and enables the user-facing features in EPIC-02 and beyond.
 
 ---
 
-## Business Value
+## Current State / Gap
 
-- **User Trust:** Secure authentication protects user accounts and conversation privacy.
-- **Safety First:** Prevents harmful content, prompt injection, and rogue AI behavior.
-- **Regulatory Compliance:** Supports future privacy regulations with proper data handling.
-- **Abuse Prevention:** Rate limiting and monitoring prevent spam and misuse.
+- **Implemented:** Infrastructure foundation from EPIC-00 (FastAPI skeleton, Next.js skeleton, PostgreSQL/Redis connections, project structure).
+- **Missing:** Auth.js integration, OAuth providers (Google, GitHub), credentials provider, session management, safety gatekeeper, rate limiting, PII scrubbing, abuse tracking.
+
+---
+
+## Problem / Opportunity
+
+Without authentication and safety controls, the platform cannot:
+- Distinguish between users or personalize their experience
+- Protect against abuse, spam, or malicious usage
+- Ensure user data privacy and conversation security
+- Prevent unsafe AI outputs or prompt injection attacks
+
+Building these controls after user-facing features would require costly refactoring and expose security vulnerabilities.
+
+---
+
+## Desired Outcome
+
+After this epic is complete:
+- Users can securely sign in via OAuth (Google, GitHub) or email/password
+- Sessions persist across server restarts and devices
+- Every chat message passes through a safety gatekeeper before AI processing
+- Rate limiting prevents abuse (50 messages/24hrs per user)
+- PII is scrubbed before memory storage
+- Users can reset passwords and verify emails
+- Abuse events are logged for monitoring
+
+This outcome matters because security and safety are foundational to user trust and cannot be retrofitted easily.
+
+---
+
+## Users / Use Cases
+
+- **Primary users:** End users (authentication), Development team (security infrastructure)
+- **Main use cases:**
+  - User signs in with Google/GitHub account
+  - User registers with email/password
+  - User resets forgotten password
+  - User verifies email address
+  - System validates every message for safety risks
+  - System rate limits excessive usage
+- **Important edge cases:**
+  - OAuth account linking (same email, different providers)
+  - Session expiration and refresh
+  - Rate limit bypass attempts
+  - Prompt injection attacks
 
 ---
 
 ## Scope
 
-### In Scope
+### In scope
 
 - ✅ Auth.js integration with Next.js (web boundary)
 - ✅ Google and GitHub OAuth providers
@@ -48,7 +89,7 @@ This epic builds directly on the infrastructure foundation from EPIC-00 and enab
 - ✅ Password reset flow
 - ✅ Email verification (for credentials provider)
 
-### Out of Scope
+### Out of scope
 
 - ❌ Multi-factor authentication (MFA) (future enhancement)
 - ❌ Social login beyond Google and GitHub (future enhancement)
@@ -58,307 +99,109 @@ This epic builds directly on the infrastructure foundation from EPIC-00 and enab
 
 ---
 
-## Key Requirements
+## Capability Slices
 
-### REQ-AUTH-01: OAuth Integration
+- **Slice 1: OAuth Integration** — Google and GitHub providers, callback handling, account linking
+- **Slice 2: Credentials Provider** — Email/password registration, login, password hashing
+- **Slice 3: Session Management** — PostgreSQL adapter, JWT tokens, session persistence
+- **Slice 4: Safety Gatekeeper** — Pre-chat validation, NSFW filtering, prompt injection detection
+- **Slice 5: Rate Limiting & Abuse Prevention** — Redis rate limiter, abuse logging, IP-based limits
+- **Slice 6: Account Recovery** — Password reset, email verification, PII scrubbing
 
-**From:** PRD-v1.md (REQ-007)
+---
 
-- Implement Google OAuth2 provider via Auth.js
-- Implement GitHub OAuth provider via Auth.js
-- Store OAuth tokens securely (encrypted at rest)
-- Handle OAuth token refresh automatically
-- Link multiple OAuth providers to same account
+## Facts / Assumptions / Constraints / Unknowns
 
-### REQ-AUTH-02: Credentials Provider
+- **Facts:**
+  - Auth.js v5 (next-auth) is the chosen authentication framework
+  - PostgreSQL is the session store (via @auth/pg-adapter)
+  - Redis is used for rate limiting
+  - bcrypt/scrypt for password hashing
+- **Assumptions:**
+  - OAuth applications will be created in Google and GitHub developer consoles
+  - SMTP or email API (Resend, SendGrid) credentials are available
+  - Production will enforce HTTPS for all auth flows
+- **Constraints:**
+  - Passwords must NEVER be stored in plain text
+  - Minimum password length: 8 characters
+  - Rate limit: 50 messages/24hrs per user (MVP)
+  - Tokens must expire (1 hour for reset, 24 hours for verification)
+  - Tokens must be single-use
+- **Unknowns:**
+  - Exact OAuth client secrets (to be configured per environment)
+  - Email provider choice (Resend vs SendGrid vs SMTP)
 
-- Email/password authentication with Auth.js
-- Password complexity requirements (min 8 chars, mixed case, number)
-- Secure password hashing (bcrypt/scrypt)
-- Email verification for new accounts
-- Password reset with time-limited tokens
+---
 
-### REQ-AUTH-03: PostgreSQL Adapter
+## Proposed Solution
 
-- Auth.js adapter for PostgreSQL (next-auth/prisma or custom)
-- Store users, accounts, sessions, verification tokens
-- Session persistence and expiration
-- Concurrent session management
+**Authentication Architecture:**
+- Use Auth.js v5 with Next.js App Router
+- PostgreSQL adapter for session persistence (next-auth/prisma or custom)
+- OAuth providers: Google, GitHub
+- Credentials provider with bcrypt password hashing
 
-### REQ-AUTH-04: Safety Gatekeeper
+**Safety Gatekeeper Chain:**
+```
+User Message → Rate Limit Check → Injection Detection → NSFW Filter → Sensitive Topic Check → Persona Agent
+```
 
-**From:** PRD-v1.md (REQ-008)
+**Rate Limiting:**
+- Redis-based sliding window using sorted sets
+- Key pattern: `rate_limit:{user_id}`
+- Window: 86400 seconds (24 hours), Limit: 50 requests
 
-- Lightweight prompt evaluation before Persona Agent
-- Sequential execution: Gatekeeper → Persona → Response
-- Input classification for safety risks
-- Output validation before streaming to user
-- NSFW content detection and blocking
-- Sensitive topic filtering (self-harm, violence, etc.)
-- Graceful fallback responses when triggered
-- Logging of safety events for monitoring
-
-### REQ-AUTH-05: Prompt Injection Prevention
-
-- Detect common prompt injection patterns
-- Sanitize user input to prevent system prompt leakage
-- Context boundary enforcement
-- Rate limiting on suspicious patterns
-- Separate system and user message boundaries
-
-### REQ-AUTH-06: Rate Limiting
-
-**From:** PRD-v1.md (REQ-010)
-
-- Redis-based sliding window rate limiter
-- 50 messages per 24 hours per user (MVP)
-- Per-IP rate limiting for unauthenticated endpoints
-- Configurable limits per user tier (future)
-- Clear error messages when rate limit exceeded
-- Retry-After header in responses
-
-### REQ-AUTH-07: PII Scrubbing
-
-**From:** PRD-v1.md (Security & Privacy)
-
-- Filter phone numbers before memory persistence
-- Filter specific addresses before memory persistence
-- Configurable PII patterns (regex-based)
-- Preserve non-sensitive personal details (hobbies, preferences)
+**PII Scrubbing:**
+- Regex-based pattern matching for phone numbers, emails, SSN
+- Configurable patterns via environment variables
 - Audit logging of scrubbed content (metadata only)
 
-### REQ-AUTH-08: Data Deletion
-
-- "Wipe My Memory" button functionality
-- Delete user_memories table entries
-- Update user_profiles to reset state
-- Soft-delete conversations or anonymize
-- GDPR-compliant data export endpoint
+**Key tradeoffs:**
+- Chose PostgreSQL adapter over JWT-only for better session management and revocation capability
+- Chose sequential gatekeeper (simpler debugging) over parallel checks
+- Chose Redis sorted sets for rate limiting (atomic operations) over counter-based approach
 
 ---
 
-## Technical Design
+## Dependencies / Rollout / Risks
 
-### Authentication Flow
+### Dependencies
 
-#### OAuth Flow
+- **External:**
+  - Auth.js (next-auth) — Authentication framework
+  - Google OAuth — OAuth provider
+  - GitHub OAuth — OAuth provider
+  - bcrypt — Password hashing
+  - @auth/pg-adapter — PostgreSQL adapter for Auth.js
+  - Redis — Rate limiting store
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant NextJS as Next.js (Web)
-    participant AuthJS as Auth.js
-    participant Google/GitHub
-    participant FastAPI as FastAPI API
-    participant Postgres as PostgreSQL
-    
-    User->>NextJS: Click "Sign in with Google"
-    NextJS->>AuthJS: Initiate OAuth flow
-    AuthJS->>Google: Redirect to auth
-    Google->>User: Authentication prompt
-    User->>Google: Grant permission
-    Google->>AuthJS: Authorization code
-    AuthJS->>Google: Exchange code for token
-    Google->>AuthJS: Access token
-    AuthJS->>Postgres: Create/update user
-    AuthJS->>NextJS: Session cookie (secure, httpOnly)
-    NextJS->>User: Redirect to app
-    
-    Note over NextJS,FastAPI: Subsequent requests
-    NextJS->>FastAPI: API request with auth context
-    FastAPI->>FastAPI: Validate session
-    FastAPI->>Postgres: Process request
-```
+- **Internal:**
+  - **EPIC-00: Infrastructure & Project Setup** — Must be completed first
+    - FastAPI project skeleton
+    - Next.js project skeleton
+    - PostgreSQL connection
+    - Redis connection
 
-#### Credentials Flow
+### Rollout notes
 
-```mermaid
-sequenceDiagram
-    participant User
-    participant NextJS
-    participant AuthJS
-    participant Postgres
-    
-    User->>NextJS: Enter email/password
-    NextJS->>AuthJS: POST /api/auth/callback/credentials
-    AuthJS->>Postgres: Verify credentials
-    Postgres->>AuthJS: User record
-    AuthJS->>AuthJS: Validate password (bcrypt)
-    AuthJS->>Postgres: Create session
-    AuthJS->>NextJS: Session cookie
-    NextJS->>User: Redirect to app
-```
+- OAuth credentials must be configured per environment (dev, staging, prod)
+- Email templates need to be tested with real email accounts
+- Rate limiting should start in logging mode before enforcement
 
-### Safety Gatekeeper Architecture
+### Risks
 
-```mermaid
-graph TD
-    User[User Message] --> NextJS[Next.js]
-    NextJS -->|Authenticated| FastAPI[FastAPI API]
-    
-    subgraph "Gatekeeper Chain"
-        FastAPI --> RateLimit[Rate Limit Check]
-        RateLimit --> Injection[Injection Detection]
-        Injection --> NSFW[NSFW Filter]
-        NSFW --> Topic[Sensitive Topic Check]
-        Topic --> Persona[Persona Agent]
-    end
-    
-    Persona -->|Safe| Stream[Stream Response]
-    Persona -->|Unsafe| Fallback[Graceful Fallback]
-    
-    Stream --> NextJS
-    Fallback --> NextJS
-```
-
-### Rate Limiting Implementation
-
-**Redis Sliding Window:**
-
-```python
-import redis
-import time
-
-async def check_rate_limit(user_id: str, limit: int = 50, window: int = 86400):
-    """Sliding window rate limiter using Redis sorted sets."""
-    key = f"rate_limit:{user_id}"
-    now = time.time()
-    window_start = now - window
-    
-    async with redis_client.pipeline() as pipe:
-        # Remove old entries
-        pipe.zremrangebyscore(key, 0, window_start)
-        # Count current entries
-        pipe.zcard(key)
-        # Add current request
-        pipe.zadd(key, {str(now): now})
-        # Expire key
-        pipe.expire(key, window)
-        results = await pipe.execute()
-    
-    current_count = results[1]
-    return current_count < limit
-```
-
-### PII Scrubbing Pipeline
-
-```python
-import re
-
-PII_PATTERNS = {
-    'phone': re.compile(r'\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b'),
-    'email': re.compile(r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'),
-    'ssn': re.compile(r'\b\d{3}-\d{2}-\d{4}\b'),
-    # Addresses: more complex, use NLP or conservative pattern
-}
-
-def scrub_pii(text: str) -> tuple[str, list[str]]:
-    """Scrub PII from text, return (cleaned_text, redacted_items)."""
-    redacted = []
-    cleaned = text
-    
-    for pii_type, pattern in PII_PATTERNS.items():
-        matches = pattern.findall(cleaned)
-        if matches:
-            redacted.extend([f"{pii_type}: {m}" for m in matches])
-            cleaned = pattern.sub(f'[{pii_type.upper()}_REDACTED]', cleaned)
-    
-    return cleaned, redacted
-```
-
-### Session Configuration (Next.js + Auth.js)
-
-```typescript
-// auth.ts
-import NextAuth from "next-auth"
-import Google from "next-auth/providers/google"
-import GitHub from "next-auth/providers/github"
-import Credentials from "next-auth/providers/credentials"
-// Use PostgreSQL adapter directly to avoid multi-ORM complexity
-import PostgresAdapter from "@auth/pg-adapter"
-import { Pool } from "pg"
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-})
-
-export const { handlers, auth, signIn, signOut } = NextAuth({
-  adapter: PostgresAdapter(pool),
-  providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-    GitHub({
-      clientId: process.env.GITHUB_CLIENT_ID!,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-    }),
-    Credentials({
-      credentials: {
-        email: { label: "Email" },
-        password: { label: "Password", type: "password" },
-      },
-      async authorize(credentials) {
-        // Validate credentials against database
-        const user = await validateUser(credentials?.email as string, credentials?.password as string)
-        return user
-      },
-    }),
-  ],
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (session.user) {
-        session.user.id = token.id as string
-      }
-      return session
-    },
-  },
-})
-```
-
-### FastAPI Authentication Middleware
-
-```python
-# app/core/security.py
-from fastapi import Request, HTTPException
-from fastapi.security import HTTPBearer
-import jwt
-
-security = HTTPBearer()
-
-def get_current_user(request: Request) -> dict:
-    """Validate JWT from Next.js session."""
-    # In production, use a shared secret or public key
-    # For simplicity, we trust the Next.js session context
-    # passed via internal headers or validated JWT
-    auth_header = request.headers.get("authorization")
-    if not auth_header:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    
-    # Validate token
-    try:
-        token = auth_header.replace("Bearer ", "")
-        payload = jwt.decode(token, SECRET_KEY, algorithms=["HS256"])
-        return payload
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-```
+| Risk | Impact | Probability | Mitigation |
+|------|--------|-------------|------------|
+| OAuth configuration errors | High | Medium | Use official libraries, test thoroughly in dev |
+| Session security vulnerabilities | Critical | Low | HttpOnly cookies, secure flags, short expiry |
+| Rate limit bypass | Medium | Low | Multiple layers (IP + account), Redis atomic ops |
+| False positives in content filtering | Medium | Medium | Adjustable thresholds, human review option |
+| PII scrubbing misses data | High | Medium | Multiple pattern types, audit sampling |
+| Password reset token leakage | High | Low | Short expiry, single-use tokens |
 
 ---
 
-## Acceptance Criteria
-
-### Must Have
+## Epic Done Criteria
 
 - [ ] Google OAuth provider configured and working
 - [ ] GitHub OAuth provider configured and working
@@ -376,115 +219,29 @@ def get_current_user(request: Request) -> dict:
 - [ ] Abuse events logged to database
 - [ ] Clear error messages for auth failures
 
-### Should Have
-
-- [ ] Concurrent session management
-- [ ] Session refresh without re-login
-- [ ] Rate limit override for admin users (future)
-- [ ] Detailed audit log for security events
-- [ ] Suspicious activity monitoring
-- [ ] Account lockout after repeated failures
-
-### Could Have
-
-- [ ] Remember me functionality
-- [ ] Social account linking/unlinking UI
-- [ ] Account deletion with confirmation flow
-- [ ] Data export in JSON format
-
-### Won't Have (This Epic)
-
-- ❌ MFA/TOTP (future enhancement)
-- ❌ Enterprise SSO (future enhancement)
-- ❌ Advanced bot detection (CAPTCHA etc.)
-- ❌ Real-time automated account suspension
-
 ---
 
-## Dependencies
+## Task Writer Handoff
 
-### External Dependencies
-
-- **Auth.js** (next-auth) - Authentication framework
-- **Google OAuth** - OAuth provider
-- **GitHub OAuth** - OAuth provider
-- **bcrypt** - Password hashing
-- **@auth/pg-adapter** - PostgreSQL adapter for Auth.js
-
-### Internal Dependencies
-
-- **EPIC-00: Infrastructure & Project Setup** - Must be completed first
-  - FastAPI project skeleton
-  - Next.js project skeleton
-  - PostgreSQL connection
-  - Redis connection
-
----
-
-## Timeline & Milestones
-
-**Sprint 1: Scalable Gateway** (Target: 2 weeks)
-
-| Milestone | Target Date | Deliverable |
-|-----------|-------------|-------------|
-| M1 | Day 2 | OAuth providers configured in Next.js |
-| M2 | Day 4 | Credentials provider working |
-| M3 | Day 5 | PostgreSQL adapter storing sessions |
-| M4 | Day 7 | Rate limiting implemented in Redis |
-| M5 | Day 9 | Safety gatekeeper integrated in FastAPI |
-| M6 | Day 10 | PII scrubbing pipeline functional |
-| M7 | Day 11 | "Wipe My Memory" endpoint working |
-| M8 | Day 12 | Abuse logging implemented |
-| M9 | Day 13 | Security testing and validation |
-| M10 | Day 14 | Epic-01 acceptance criteria met |
-
----
-
-## Risks & Mitigations
-
-| Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
-| OAuth configuration errors | High | Medium | Use official libraries, test thoroughly in dev |
-| Session security vulnerabilities | Critical | Low | HttpOnly cookies, secure flags, short expiry |
-| Rate limit bypass | Medium | Low | Multiple layers (IP + account), Redis atomic ops |
-| False positives in content filtering | Medium | Medium | Adjustable thresholds, human review option |
-| PII scrubbing misses data | High | Medium | Multiple pattern types, audit sampling |
-| Password reset token leakage | High | Low | Short expiry, single-use tokens |
-
----
-
-## Success Metrics
-
-- **Authentication Success Rate:** > 99.5%
-- **Session Hijacking Incidents:** 0
-- **Rate Limit Effectiveness:** > 95% of abuse attempts blocked
-- **Safety Gatekeeper Trigger Rate:** < 1% of messages (low false positive rate)
-- **PII in Memory Storage:** 0 (fully scrubbed)
-- **Password Reset Success Rate:** > 95%
-- **OAuth Configuration Errors:** 0 in production
-- **Average Auth Response Time:** < 200ms
-
----
-
-## Out of Scope for This Epic
-
-The following will be addressed in their respective epics:
-
-- **EPIC-00:** Basic project structure, database schemas, dev environment
-- **EPIC-02:** Chat UI, message display, typing indicators
-- **EPIC-03:** AI provider integration, memory extraction logic
-- **EPIC-04:** Correction generation, progress cards
-- **EPIC-05:** Production deployment, advanced observability
-
----
-
-## References
-
-- [PRD-v1.md](../../PRD-v1.md) - Product requirements (REQ-007, REQ-008, REQ-010)
-- [ARCHITECTURE.md](../../ARCHITECTURE.md) - System architecture
-- [TECHSTACK.md](../../TECHSTACK.md) - Technology choices
-- [PRINCIPLES.md](../../PRINCIPLES.md) - Design principles (Privacy, Security)
-- [ONBOARDING.md](../../ONBOARDING.md) - Team onboarding
+- **Epic slug:** EPIC-01
+- **Epic file path:** `docs/project-management/epics/EPIC-01.md`
+- **Original requirement:** PRD-v1.md (REQ-007, REQ-008, REQ-010)
+- **Epic summary:** Authentication, authorization, and safety control infrastructure
+- **Impacted domains:** Authentication, Security, Platform
+- **Desired outcome:** Users can securely authenticate; all messages pass safety checks
+- **In-scope outcomes:** OAuth, credentials, sessions, gatekeeper, rate limiting, PII scrubbing
+- **Non-goals:** MFA, enterprise SSO, advanced bot detection
+- **Capability slices:** 6 slices (OAuth, credentials, sessions, gatekeeper, rate limiting, recovery)
+- **Facts:** Auth.js v5, PostgreSQL adapter, Redis rate limiting, bcrypt hashing
+- **Assumptions:** OAuth apps created, email API available, HTTPS in production
+- **Constraints:** Passwords never plain text, 8+ chars, 50 msgs/24hr, tokens expire
+- **Unknowns:** OAuth secrets per environment, email provider choice
+- **Proposed solution summary:** Auth.js + PostgreSQL + Redis gatekeeper chain with rate limiting
+- **Dependencies:** EPIC-00 (infrastructure skeletons, database, Redis)
+- **Rollout notes:** Configure OAuth per environment, test email templates
+- **Risks:** OAuth errors, session vulnerabilities, rate limit bypass, PII leakage
+- **Task splitting hints:** Split by capability slice (OAuth → credentials → sessions → gatekeeper → rate limiting → recovery)
+- **Validation expectations:** All auth flows must be testable end-to-end with clear pass/fail
 
 ---
 
@@ -493,3 +250,4 @@ The following will be addressed in their respective epics:
 | Version | Date | Author | Description |
 |---------|------|--------|-------------|
 | 1.0 | 2026-04-26 | System | Initial version based on project documentation |
+| 2.0 | 2026-04-27 | Assistant | Standardized to epic-template.md format |
