@@ -39,11 +39,13 @@ Build an AI chatbot that feels like a real messaging friend and helps users impr
   - Implement onboarding vibe check.
   - Build memory extraction pipeline in workers.
   - Add gatekeeper and profile projection update flow.
+  - **[NEW]** Implement Emotional Bonding & Lore (Progression System).
 - [ ] **Sprint 3: The Teacher** ([sprint-3/README.md](./sprint-3/README.md))
   - *Fulfills: EPIC-04*
   - Tickets: [TICKET-34](./sprint-3/TICKET-34.md) - [TICKET-42](./sprint-3/TICKET-42.md)
   - Deliver structured corrections and Sparkle Icon UX.
   - Generate weekly progress cards.
+  - **[NEW]** Implement Bridge to Reality (Scenario Simulation).
 - [ ] **Sprint 4: Production Readiness** ([sprint-4/README.md](./sprint-4/README.md))
   - *Fulfills: EPIC-05*
   - Tickets: [TICKET-43](./sprint-4/TICKET-43.md) - [TICKET-52](./sprint-4/TICKET-52.md)

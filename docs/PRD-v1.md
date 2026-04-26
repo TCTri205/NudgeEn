@@ -37,10 +37,11 @@ Creating an AI "texting friend" to help practice real-world reading/writing skil
   - Responsive design for desktop web first, mobile browser second.
 - **[REQ-002] Persona Customization**
   - Users choose a vibe: Sarcastic/Banter, Gentle/Empathetic, or Tech-savvy.
-- **[REQ-003] Subtle Correction**
-  - Corrections are non-intrusive.
-  - A **Sparkle icon** appears next to messages with better alternatives.
-  - Tapping reveals: Original vs Improved vs brief explanation.
+- **[REQ-003] Dual-Channel Correction (Separate Flow)**
+  - **Immersion Channel:** Primary chat interface focused on conversation. No automatic interruptions for corrections.
+  - **Shadow Channel:** AI identifies errors in background.
+  - **UI Trigger:** A subtle **Sparkle icon** appears next to messages with better alternatives, but viewing is optional.
+  - **Recap Space:** A dedicated area (or recurring automated message) summarizing key learning points without cluttering the chat history.
 
 #### [Group: Intelligence & Memory]
 
@@ -56,6 +57,14 @@ Creating an AI "texting friend" to help practice real-world reading/writing skil
   - Automated summary of progress delivered as an in-chat card.
   - Highlights: most used new words, grammar improvement trend.
   - Triggered on the first user message after 7 days since the last summary.
+- **[REQ-014] Bridge to Reality (Scenario Import)**
+  - Users can input or upload a real-world context (text from email/Slack).
+  - AI switches to "Simulation Mode" to help user practice.
+- **[REQ-015] Emotional Bonding & Lore**
+  - AI Persona has a background "Lore" and persistent mood states.
+  - Progression system (UserGraph) unlocks deeper conversation topics over time.
+- **[REQ-016] Adaptive Re-entry (Anti-Ghosting)**
+  - If user is inactive > 48h, the next notification is a "Life Update" from AI, not a learning reminder.
 
 #### [Group: Infrastructure & Security]
 
